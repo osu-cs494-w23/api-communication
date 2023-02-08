@@ -1,45 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
+import Spinner from '../components/Spinner'
+import ErrorContainer from '../components/ErrorContainer'
+import useReposSearch from '../hooks/useReposSearch'
+
 function Search({ query }) {
     const [ inputQuery, setInputQuery ] = useState(query || "")
     const [ searchParams, setSearchParams ] = useSearchParams()
 
-    const [ repos, setRepos ] = useState([])
-
-    // console.log("== repos:", repos)
-
-    useEffect(() => {
-        let ignore = false
-        const controller = new AbortController()
-        async function fetchSearchResults() {
-            let responseBody = {}
-            try {
-                const response = await fetch(
-                    `https://api.github.com/search/repositories?q=${query}&sort=stars`,
-                    { signal: controller.signal }
-                )
-                responseBody = await response.json()
-            } catch (e) {
-                if (e instanceof DOMException) {
-                    console.log("HTTP request cancelled")
-                } else {
-                    throw e
-                }
-            }
-
-            if (!ignore) {
-                setRepos(responseBody.items || [])
-            }
-        }
-        if (query) {
-            fetchSearchResults()
-        }
-        return () => {
-            ignore = true
-            controller.abort()
-        }
-    }, [ query ])
+    const [ repos, loading, error ] = useReposSearch(query)
 
     return (
         <div>
@@ -51,13 +21,16 @@ function Search({ query }) {
                 <button type="submit">Search</button>
             </form>
             <h2>Search query: {query}</h2>
-            <ul>
-                {repos.map(repo => (
-                    <li key={repo.id}>
-                        <a href={repo.html_url}>{repo.full_name}</a>
-                    </li>
-                ))}
-            </ul>
+            {error && <ErrorContainer>An error occurred...</ErrorContainer>}
+            {loading ? <Spinner /> : (
+                <ul>
+                    {repos.map(repo => (
+                        <li key={repo.id}>
+                            <a href={repo.html_url}>{repo.full_name}</a>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     )
 }
