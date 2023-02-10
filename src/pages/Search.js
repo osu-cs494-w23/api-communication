@@ -6,10 +6,11 @@ import ErrorContainer from '../components/ErrorContainer'
 import useReposSearch from '../hooks/useReposSearch'
 
 function Search({ query }) {
-    const [ inputQuery, setInputQuery ] = useState(query || "")
     const [ searchParams, setSearchParams ] = useSearchParams()
 
-    const [ repos, loading, error ] = useReposSearch(query)
+    const [ inputQuery, setInputQuery ] = useState(searchParams.get("q") || "")
+
+    const [ repos, loading, error ] = useReposSearch(searchParams.get("q"))
 
     return (
         <div>
@@ -20,7 +21,7 @@ function Search({ query }) {
                 <input value={inputQuery} onChange={e => setInputQuery(e.target.value)} />
                 <button type="submit">Search</button>
             </form>
-            <h2>Search query: {query}</h2>
+            <h2>Search query: {searchParams.get("q")}</h2>
             {error && <ErrorContainer>An error occurred...</ErrorContainer>}
             {loading ? <Spinner /> : (
                 <ul>
